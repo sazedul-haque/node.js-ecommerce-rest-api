@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { check } = require('express-validator');
 
+const isAuth = require('../middleware/is-auth');
+
 const UserController = require('../controllers/user');
 const User = require('../models/user');
 
 /* GET users listing. */
-router.get('/users', UserController.getUsers);
+router.get('/users', isAuth, UserController.getUsers);
 
 router.post('/register', [
   check('email').isEmail().withMessage('Please enter a valid email.').normalizeEmail().custom((value, { req }) => {
@@ -26,5 +28,7 @@ router.post('/register', [
 router.post('/login', [
   check('email').isEmail().withMessage('Please provide a valid email address.')
 ], UserController.loginUser);
+
+router.delete('/users/:userId', isAuth, UserController.deleteUser);
 
 module.exports = router;

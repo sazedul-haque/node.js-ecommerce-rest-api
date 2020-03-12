@@ -16,7 +16,11 @@ const UserSchema = new Schema({
         required: true
     },
     phone: Number,
-    address: String
+    address: String,
+    role: {
+        type: String,
+        default: 'user'
+    }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

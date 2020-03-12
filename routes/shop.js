@@ -3,6 +3,8 @@ const router = express.Router();
 
 const { check } = require('express-validator');
 
+const isAuth = require('../middleware/is-auth');
+
 const ProductController = require('../controllers/product');
 const CategoryController = require('../controllers/category');
 
@@ -14,7 +16,7 @@ router.get('/products/:productSlug', ProductController.getSingleProduct);
 //Get product by category name
 router.get('/:catSlug', ProductController.getProductByCategory);
 
-router.post('/products', [
+router.post('/products', isAuth, [
     check('title').trim().notEmpty().withMessage('Title cannot not be empty!'),
     check('category').trim().notEmpty().withMessage('Category cannot not be empty!'),
     check('sub_category').trim(),
@@ -29,7 +31,7 @@ router.post('/products', [
     // check('status').isBoolean()
 ], ProductController.createProduct);
 
-router.put('/products/:productSlug', [
+router.put('/products/:productSlug', isAuth, [
     check('title').trim().notEmpty().withMessage('Title cannot not be empty!'),
     check('category').trim().notEmpty().withMessage('Category cannot not be empty!'),
     check('sub_category').trim(),
@@ -44,21 +46,21 @@ router.put('/products/:productSlug', [
     // check('status').isBoolean()
 ], ProductController.updateProduct);
 
-router.delete('/products/:productSlug', ProductController.deleteProduct);
+router.delete('/products/:productSlug', isAuth, ProductController.deleteProduct);
 
 // Category Routes
 router.get('/categories', CategoryController.getCategories);
 
 router.get('/categories/:catId', CategoryController.getSingleCategory);
 
-router.post('/categories', [
+router.post('/categories', isAuth, [
     check('name').trim().notEmpty().withMessage('Category name cannot be empty!.')
 ], CategoryController.createCategory);
 
-router.put('/categories/:catId', [
+router.put('/categories/:catId', isAuth, [
     check('name').trim().notEmpty().withMessage('Category name cannot be empty!.')
 ], CategoryController.updateCategory);
 
-router.delete('/categories/:catId', CategoryController.deleteCategory);
+router.delete('/categories/:catId', isAuth, CategoryController.deleteCategory);
 
 module.exports = router;

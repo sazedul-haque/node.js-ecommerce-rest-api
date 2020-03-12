@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 exports.getUsers = (req, res, next) => {
+    if(req.user.role !== 'admin') {
+        return res.status(403).json({ msg: 'Not authorized'})
+    }
     User.find()
         .then(users => {
             res.status(200).json({ data: users });
@@ -27,6 +30,7 @@ exports.registerUser = (req, res, next) => {
     const password = req.body.password;
     const name = req.body.name;
     const address = req.body.address;
+    const role = req.body.role;
 
     bcrypt.hash(password, 12)
         .then(hashedPassword => {
@@ -34,7 +38,8 @@ exports.registerUser = (req, res, next) => {
                 email: email,
                 password: hashedPassword,
                 name: name,
-                address: address
+                address: address,
+                role: role
             });
             return user.save();
         })
@@ -68,13 +73,37 @@ exports.loginUser = (req, res, next) => {
             }
             const token = jwt.sign({
                 email: loadedUser.email,
-                userId: loadedUser._id.toString()
+                userId: loadedUser._id.toString(),
+                role: loadedUser.role
             }, 'somesecretkeyortext', { expiresIn: '1h'})
             res.status(200).json({
                 token: token,
-                userId: loadedUser._id.toString(),
+                // userId: loadedUser._id.toString(),
                 msg: 'Logged in successfully'
             })
+        })
+        .catch(err => {
+            if(!err) {
+                err.statusCode = 500;
+            }
+            next(err);
+        })
+}
+
+exports.deleteUser = (req, res, next) => {
+    if(req.user.role !== 'admin') {
+        return res.status(403).json({ msg: 'Not authorized.' });
+    }
+    const userId = req.params.userId;
+    User.findById(userId)
+        .then(user => {
+            if(!user) {
+                return res.status(404).json({ msg: 'User not found.' });
+            }
+            return User.deleteOne({ _id: userId })
+        })
+        .then(result => {
+            res.status(200).json({ msg: 'User deleted successfully.' });
         })
         .catch(err => {
             if(!err) {
