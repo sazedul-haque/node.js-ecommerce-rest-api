@@ -6,10 +6,18 @@ const logger = require('morgan');
 const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/index');
-const shopRouter = require('./routes/shop');
+const productRouter = require('./routes/product');
+const categoryRouter = require('./routes/category');
 const usersRouter = require('./routes/users');
 
 const app = express();
+
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  next();
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -20,9 +28,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'images')));
 
 app.use('/', indexRouter);
-app.use('/', shopRouter);
+app.use('/', productRouter);
+app.use('/', categoryRouter);
 app.use('/auth', usersRouter);
 
 // catch 404 and forward to error handler

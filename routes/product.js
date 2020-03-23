@@ -4,9 +4,9 @@ const router = express.Router();
 const { check } = require('express-validator');
 
 const isAuth = require('../middleware/is-auth');
+const imageUpload = require('../middleware/image-upload');
 
 const ProductController = require('../controllers/product');
-const CategoryController = require('../controllers/category');
 
 //Product Routes
 router.get('/products', ProductController.getProducts);
@@ -48,19 +48,5 @@ router.put('/products/:productSlug', isAuth, [
 
 router.delete('/products/:productSlug', isAuth, ProductController.deleteProduct);
 
-// Category Routes
-router.get('/categories', CategoryController.getCategories);
-
-router.get('/categories/:catId', CategoryController.getSingleCategory);
-
-router.post('/categories', isAuth, [
-    check('name').trim().notEmpty().withMessage('Category name cannot be empty!.')
-], CategoryController.createCategory);
-
-router.put('/categories/:catId', isAuth, [
-    check('name').trim().notEmpty().withMessage('Category name cannot be empty!.')
-], CategoryController.updateCategory);
-
-router.delete('/categories/:catId', isAuth, CategoryController.deleteCategory);
 
 module.exports = router;

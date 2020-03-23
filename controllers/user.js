@@ -75,7 +75,7 @@ exports.loginUser = (req, res, next) => {
                 email: loadedUser.email,
                 userId: loadedUser._id.toString(),
                 role: loadedUser.role
-            }, 'somesecretkeyortext', { expiresIn: '1h'})
+            }, 'somesecretkeyortext', { expiresIn: '1d'})
             res.status(200).json({
                 token: token,
                 // userId: loadedUser._id.toString(),

@@ -1,3 +1,6 @@
+const fs = require('fs');
+const path = require('path');
+
 const { validationResult } = require('express-validator');
 const cuid = require('cuid');
 const { slugify, urlSlug } = require('../util/helperFunctions');
@@ -49,7 +52,10 @@ exports.createCategory = (req, res, next) => {
             }
             const name = req.body.name;
             const slug = slugify(name);
-            const image = req.body.image;
+            let image;
+            if(req.file){
+                image = req.file.path; 
+            }
 
             const category = new Category({
                 name: name,
@@ -79,12 +85,18 @@ exports.updateCategory = (req, res, next) => {
     }
     const updatedName = req.body.name;
     const updatedSlug = slugify(updatedName);
-    const updatedImage = req.body.image;
+    let updatedImage = req.body.image;
+    if(req.file) {
+        updatedImage = req.file.path;
+    }
 
     Category.findById(catId)
         .then(category => {
             if(!category){
                 return res.status(404).json({ msg: 'Category not found' });
+            }
+            if(req.file && updatedImage !== category.image) {
+                clearImage(category.image)
             }
             category.name = updatedName;
             category.slug = updatedSlug;
@@ -110,7 +122,8 @@ exports.deleteCategory = (req, res, next) => {
             if(!category){
                 return res.status(404).json({ msg: 'Category not found.' });
             }
-            return Category.deleteOne({ _id: catId })
+            clearImage(category.image)
+            return Category.findByIdAndRemove(catId)
         })
         .then(result => {
             res.status(200).json({ msg: 'Category deleted.' });
@@ -121,4 +134,9 @@ exports.deleteCategory = (req, res, next) => {
             }
             next(err);
         })
+}
+
+const clearImage = filePath => {
+    filePath = path.join(__dirname, '..', filePath);
+    fs.unlink(filePath, err => console.log(err));
 }
