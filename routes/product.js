@@ -14,9 +14,9 @@ router.get('/products', ProductController.getProducts);
 router.get('/products/:productSlug', ProductController.getSingleProduct);
 
 //Get product by category name
-router.get('/:catSlug', ProductController.getProductByCategory);
+router.get('/products/cats/:catSlug', ProductController.getProductByCategory);
 
-router.post('/products', isAuth, [
+router.post('/products', isAuth, imageUpload.array('images', 12), [
     check('title').trim().notEmpty().withMessage('Title cannot not be empty!'),
     check('category').trim().notEmpty().withMessage('Category cannot not be empty!'),
     check('sub_category').trim(),
@@ -29,9 +29,9 @@ router.post('/products', isAuth, [
     // check('images').trim(),
     check('price').isFloat().notEmpty().withMessage('Price cannot not be empty!'),
     // check('status').isBoolean()
-], ProductController.createProduct);
+], ProductController.createProduct); 
 
-router.put('/products/:productSlug', isAuth, [
+router.put('/products/:productId', isAuth, imageUpload.array('images', 12), [
     check('title').trim().notEmpty().withMessage('Title cannot not be empty!'),
     check('category').trim().notEmpty().withMessage('Category cannot not be empty!'),
     check('sub_category').trim(),
@@ -46,7 +46,7 @@ router.put('/products/:productSlug', isAuth, [
     // check('status').isBoolean()
 ], ProductController.updateProduct);
 
-router.delete('/products/:productSlug', isAuth, ProductController.deleteProduct);
+router.delete('/products/:productId', isAuth, ProductController.deleteProduct);
 
 
 module.exports = router;

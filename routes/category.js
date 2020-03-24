@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-
 const { check } = require('express-validator');
 
 const isAuth = require('../middleware/is-auth');
@@ -8,7 +7,6 @@ const imageUpload = require('../middleware/image-upload');
 
 const CategoryController = require('../controllers/category');
 
-// Category Routes
 router.get('/categories', CategoryController.getCategories);
 
 router.get('/categories/:catId', CategoryController.getSingleCategory);

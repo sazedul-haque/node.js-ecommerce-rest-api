@@ -1,6 +1,9 @@
+const fs = require('fs');
+const path = require('path');
+
 const { validationResult } = require('express-validator');
 const cuid = require('cuid');
-const { slugify, urlSlug } = require('../util/helperFunctions');
+const { slugify } = require('../util/helperFunctions');
 
 const Product = require('../models/product');
 const Category = require('../models/category');
@@ -103,7 +106,10 @@ exports.createProduct = (req, res, next) => {
         const for_whom = req.body.for_whom;
         const overview = req.body.overview;
         const details = req.body.details;
-        const images = req.body.images;
+        let images;
+        if(req.files) {
+            images = req.files.map(file => file.path);
+        }
         const price = req.body.price;
         const product = new Product({
             title: title,
@@ -137,7 +143,7 @@ exports.createProduct = (req, res, next) => {
 
 exports.updateProduct = (req, res, next) => {
     if(req.user.role === 'admin' || req.user.role === 'manager') {
-        const slug = req.params.productSlug;
+        const id = req.params.productId;
 
         const errors = validationResult(req);
         if(!errors.isEmpty()) {
@@ -145,6 +151,9 @@ exports.updateProduct = (req, res, next) => {
         }
 
         const updatedTitle = req.body.title;
+        const urlSlug = (title, fingerprint) => {
+            return `${slugify(title)}-${fingerprint}`;
+        }
         const updatedSlug = urlSlug(updatedTitle, cuid.slug());
         const updatedCategory = req.body.category;
         const updatedSub_category = req.body.sub_category;
@@ -154,13 +163,22 @@ exports.updateProduct = (req, res, next) => {
         const updatedFor_whom = req.body.for_whom;
         const updatedOverview = req.body.overview;
         const updatedDetails = req.body.details;
-        const updatedImages = req.body.images;
+        let updatedImages;
+        if(req.files) {
+            updatedImages = req.files.map(file => file.path);
+        }
         const updatedPrice = req.body.price;
-
-        Product.findOne({ slug: slug })
+        
+        Product.findById(id)
             .then(product => {
                 if(!product){
                     return res.status(404).json({ msg: 'Product not found' });
+                }
+
+                if(req.files){
+                    const newPaths = req.files.map(file => file.path);
+                    const deleteFiles = product.images.filter(file => !newPaths.includes(file))
+                    clearImage(deleteFiles);
                 }
 
                 if(product.title !== updatedTitle){
@@ -169,14 +187,14 @@ exports.updateProduct = (req, res, next) => {
                 product.title = updatedTitle;
                 product.category =  updatedCategory;
                 product.sub_category = updatedSub_category;
-                product.collection = updatedCase_collection;
+                product.case_collection = updatedCase_collection;
                 product.design = updatedDesign;
                 product.device_model = updatedDevice_model;
                 product.for_whom = updatedFor_whom;
                 product.overview = updatedOverview;
                 product.details = updatedDetails;
-                product.image = updatedImages;
-                product.price = updatedPrice;
+                product.images = updatedImages;
+                product.price = updatedPrice; 
                 return product.save()
             })
             .then(result => {
@@ -195,13 +213,14 @@ exports.updateProduct = (req, res, next) => {
 
 exports.deleteProduct = (req, res, next) => {
     if(req.user.role === 'admin' || req.user.role === 'manager') {
-        const slug = req.params.productSlug;
+        const id = req.params.productId;
 
-        Product.findOne({ slug: slug })
+        Product.findById(id)
             .then(product => {
                 if(!product){
                     return res.status(404).json({ msg: 'Product not found' });
                 }
+                clearImage(product.images);
                 return Product.deleteOne({ slug: slug })
             })
             .then(result => {
@@ -215,5 +234,12 @@ exports.deleteProduct = (req, res, next) => {
             })
     } else {
         return res.status(403).json({ msg: 'Not authorized'});
+    }
+}
+
+const clearImage = filePaths => {
+    for(let filePath of filePaths) {
+        filePath = path.join(__dirname, '..', filePath);
+        fs.unlink(filePath, err => console.log(err));
     }
 }
